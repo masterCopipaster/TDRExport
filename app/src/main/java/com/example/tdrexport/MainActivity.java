@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 import android.widget.EditText;
 import android.net.Uri;
 import android.widget.Toast;
+import android.widget.ListAdapter;
 
 import java.io.File;
 import java.lang.reflect.Array;
@@ -51,6 +53,13 @@ public class MainActivity extends AppCompatActivity {
         projList = new ArrayList<>();
         projListAdapter = new ArrayAdapter<>(this, simple_list_item_1, projList);
         projListView.setAdapter(projListAdapter);
+        projListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View itemClicked, int position,
+                                    long id) {
+                screenText.setText(((TextView) itemClicked).getText());
+            }
+        });
 
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -68,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
             projList.add(name);
             fullList += "entry: " + name + "\n";
         }
-
+        projListAdapter.notifyDataSetChanged();
         screenText.setText(fullList);
         enterText.setText(Environment.getDataDirectory().getPath());
     }
