@@ -27,6 +27,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import static android.R.layout.simple_list_item_1;
+import static android.provider.AlarmClock.EXTRA_MESSAGE;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -42,6 +43,10 @@ public class MainActivity extends AppCompatActivity {
     public final String tdrDefaultDir = "/storage/emulated/0/TopoDroid";
     public String tdrDir = tdrDefaultDir;
 
+    public final String tdrDirNotFoundMsg = "Директория топодроид не найдена введите путь";
+    public final String tdrNoProjMsg = "Топосьемки не найдены, возможно путь к папке ошибочный";
+    public final String selectProjMsg = "Выберите сьемку для экспорта";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,9 +60,11 @@ public class MainActivity extends AppCompatActivity {
         projListView.setAdapter(projListAdapter);
         projListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View itemClicked, int position,
-                                    long id) {
-                screenText.setText(((TextView) itemClicked).getText());
+            public void onItemClick(AdapterView<?> parent, View itemClicked, int position, long id) {
+                Intent intent = new Intent(MainActivity.this, ProjMng.class);
+                String message = ((TextView) itemClicked).getText().toString();
+                intent.putExtra(EXTRA_MESSAGE, message);
+                startActivity(intent);
             }
         });
 
@@ -69,18 +76,20 @@ public class MainActivity extends AppCompatActivity {
                     0);
         }
 
-        String list[] = scanTdrDir();
-
-        String fullList = "";
-        
-        for(String name : list){
-            projList.add(name);
-            fullList += "entry: " + name + "\n";
+        //check if tdr directory exists
+        File dir = new File(tdrDir);
+        //if not open string editor
+        if(! dir.exists()){
+            screenText.setText(tdrDirNotFoundMsg);
+            Toast.makeText(this, tdrDirNotFoundMsg, Toast.LENGTH_SHORT).show();
+            enterButton.setVisibility(View.VISIBLE);
+            enterText.setVisibility(View.VISIBLE);
+            return;
         }
-        projListAdapter.notifyDataSetChanged();
-        screenText.setText(fullList);
-        enterText.setText(Environment.getDataDirectory().getPath());
+
+        buildProjList();
     }
+
     private static final int PICK_PDF_FILE = 2;
 
     private void openFile() {
@@ -95,39 +104,38 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent, PICK_PDF_FILE);
     }
 
-    public void onEnterClick(View v)
-    {
-
-        File dir;
-        try {
-            dir = new File(enterText.getText().toString());
-        }
-        catch (NullPointerException e) {
-            Toast.makeText(getApplicationContext(), "failed", Toast.LENGTH_LONG).show();
-            return;
-        }
-        if(dir == null) screenText.setText("нет такого файла ГГ");
-        // если объект представляет каталог
-        if(dir.isDirectory())
-        {
-            String list[] = dir.list();
-            String fullList = "path: ".concat(dir.getPath().concat("\n"));
-            if(list == null)
-            {
-                screenText.setText("Пусто ебать");// + String.valueOf(dir.listFiles().length));
-                return;
-            }
-            for(int i = 0; i < list.length; i++)
-            fullList += "entry: " + list[i] + "\n";
-            screenText.setText(fullList);
-            //openFile();
+    public void onEnterClick(View v){
+        tdrDir = enterText.getText().toString();
+        File dir = new File(tdrDir);
+        if(dir.exists()) {
+            buildProjList();
         }
     }
 
+    public void buildProjList(){
+        String list[] = scanTdrDir();
+        if(list.length == 0){
+            screenText.setText(tdrNoProjMsg);
+            enterButton.setVisibility(View.VISIBLE);
+            enterText.setVisibility(View.VISIBLE);
+            Toast.makeText(this, tdrNoProjMsg, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        for(String name : list){
+            projList.add(name);
+        }
+        enterButton.setVisibility(View.GONE);
+        enterText.setVisibility(View.GONE);
+        screenText.setText(selectProjMsg);
+        projListAdapter.notifyDataSetChanged();
+    }
+
     public String[] scanTdrDir() {
-        File thFiles[] = new File(tdrDir + "/th").listFiles();
-        ArrayList<String> groups = new ArrayList<>();;
         String res[] = {};
+        File thFiles[] = new File(tdrDir + "/th").listFiles();
+        if(thFiles == null) return res;
+        ArrayList<String> groups = new ArrayList<>();;
+
         for(int i = 0; i < thFiles.length; i++){
             String name = thFiles[i].getName();
             groups.add(name.substring(0, name.indexOf(".")));
