@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.FileUtils;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.AdapterView;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +49,7 @@ public class ProjMng extends AppCompatActivity {
     ArrayList<String>  exportFilesList;
     HashMap<String, String> namePathMap;
     String exportDir;
+    Uri exportDirUri;
 
 
     TextView debugTextView;
@@ -125,7 +128,8 @@ public class ProjMng extends AppCompatActivity {
             Uri uri = null;
             if (resultData != null) {
                 uri = resultData.getData();
-                exportDir = convertMediaUriToPath(uri);//uri.getLastPathSegment();
+                //exportDir = convertMediaUriToPath(uri);//uri.getLastPathSegment();
+                exportDirUri = uri;
                 moveFiles();
             }
         }
@@ -164,9 +168,16 @@ public class ProjMng extends AppCompatActivity {
     }
 
     public void moveFiles(){
+        //File destdir = new File(exportDirUri);
 
         for(String filename : exportFilesList){
             File source = new File(namePathMap.get(filename));
+            try {
+                Uri newkid = DocumentsContract.createDocument(getContentResolver(), exportDirUri, null, filename);
+            }
+            catch(FileNotFoundException e){
+                Toast.makeText(this, "copy failed", Toast.LENGTH_SHORT).show();
+            }
             File dest = new File(exportDir + "/" + filename);
             try {
                 copyFileUsingStream(source, dest);
