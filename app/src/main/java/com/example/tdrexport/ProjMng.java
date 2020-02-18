@@ -2,8 +2,14 @@ package com.example.tdrexport;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.FileUtils;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -14,6 +20,12 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,13 +37,16 @@ import static java.lang.StrictMath.min;
 public class ProjMng extends AppCompatActivity {
 
     public final String tdrDefaultDir = "/storage/emulated/0/TopoDroid";
-    public String tdrDir = tdrDefaultDir;
+    public String tdrDir;
+    SharedPreferences tdrDirSpref;
+    public final String tdrDirSprefKey = "tdr_dir_spref";
 
     private ListView filesListView;
     private ArrayAdapter<String> filesListAdapter;
     ArrayList<String>  filesList;
     ArrayList<String>  exportFilesList;
     HashMap<String, String> namePathMap;
+    String exportDir;
 
 
     TextView debugTextView;
@@ -60,7 +75,8 @@ public class ProjMng extends AppCompatActivity {
 
         Intent intent = getIntent();
         String message = intent.getStringExtra(EXTRA_MESSAGE);
-        debugTextView.setText("managing project " + message);
+        loadTdrDirSpref();
+        debugTextView.setText("managing project " + tdrDir);
         buildProjList(message);
     }
 
@@ -89,6 +105,82 @@ public class ProjMng extends AppCompatActivity {
             filesList.add(name);
         }
         filesListAdapter.notifyDataSetChanged();
+    }
+
+    public void onExportClick(View v){
+        openFile();
+    }
+
+    private static final int PICK_DIRECTORY = 2;
+    private void openFile() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        startActivityForResult(intent, PICK_DIRECTORY);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode,
+                                 Intent resultData) {
+        super.onActivityResult(requestCode, resultCode, resultData);
+        if (requestCode == PICK_DIRECTORY && resultCode == Activity.RESULT_OK) {
+            Uri uri = null;
+            if (resultData != null) {
+                uri = resultData.getData();
+                exportDir = convertMediaUriToPath(uri);//uri.getLastPathSegment();
+                moveFiles();
+            }
+        }
+    }
+
+
+    /*
+    Input: URI -- something like content://com.example.app.provider/table2/dataset1
+    Output: PATH -- something like /sdcard/DCIM/123242-image.jpg
+    */
+    public String convertMediaUriToPath(Uri uri) {
+        String [] proj={MediaStore.Images.Media.DATA};
+        Cursor cursor = this.getContentResolver().query(uri, proj,  null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String path = cursor.getString(column_index);
+        cursor.close();
+        return path;
+    }
+
+    private static void copyFileUsingStream(File source, File dest) throws IOException {
+        InputStream is = null;
+        OutputStream os = null;
+        try {
+            is = new FileInputStream(source);
+            os = new FileOutputStream(dest);
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = is.read(buffer)) > 0) {
+                os.write(buffer, 0, length);
+            }
+        } finally {
+            is.close();
+            os.close();
+        }
+    }
+
+    public void moveFiles(){
+
+        for(String filename : exportFilesList){
+            File source = new File(namePathMap.get(filename));
+            File dest = new File(exportDir + "/" + filename);
+            try {
+                copyFileUsingStream(source, dest);
+            }
+            catch ( IOException e)
+            {
+                Toast.makeText(this, "copy failed", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void loadTdrDirSpref(){
+        tdrDirSpref = getPreferences(MODE_PRIVATE);
+        tdrDir = tdrDirSpref.getString(tdrDirSprefKey, tdrDefaultDir);
     }
 
 }

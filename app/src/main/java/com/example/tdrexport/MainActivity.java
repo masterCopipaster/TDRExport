@@ -7,6 +7,7 @@ import androidx.core.os.EnvironmentCompat;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -41,7 +42,9 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> projList;
 
     public final String tdrDefaultDir = "/storage/emulated/0/TopoDroid";
-    public String tdrDir = tdrDefaultDir;
+    public String tdrDir;
+    SharedPreferences tdrDirSpref;
+    public final String tdrDirSprefKey = "tdr_dir_spref";
 
     public final String tdrDirNotFoundMsg = "Директория топодроид не найдена введите путь";
     public final String tdrNoProjMsg = "Топосьемки не найдены, возможно путь к папке ошибочный";
@@ -76,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
                     0);
         }
 
+        //load shared pref with TDR dir
+        loadTdrDirSpref();
         //check if tdr directory exists
         File dir = new File(tdrDir);
         //if not open string editor
@@ -88,20 +93,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         buildProjList();
-    }
-
-    private static final int PICK_PDF_FILE = 2;
-
-    private void openFile() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/pdf");
-
-        // Optionally, specify a URI for the file that should appear in the
-        // system file picker when it loads.
-        //intent.putExtra(DocumentsContract.);
-
-        startActivityForResult(intent, PICK_PDF_FILE);
     }
 
     public void onEnterClick(View v){
@@ -128,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
         enterText.setVisibility(View.GONE);
         screenText.setText(selectProjMsg);
         projListAdapter.notifyDataSetChanged();
+        saveTdrDirSpref(tdrDir);
     }
 
     public String[] scanTdrDir() {
@@ -142,4 +134,15 @@ public class MainActivity extends AppCompatActivity {
         }
         return groups.toArray(res);
     }
+    private void saveTdrDirSpref(String param){
+        tdrDirSpref = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor ed = tdrDirSpref.edit();
+        ed.putString(tdrDirSprefKey, param);
+        ed.commit();
+    }
+    private void loadTdrDirSpref(){
+        tdrDirSpref = getPreferences(MODE_PRIVATE);
+        tdrDir = tdrDirSpref.getString(tdrDirSprefKey, tdrDefaultDir);
+    }
+
 }
