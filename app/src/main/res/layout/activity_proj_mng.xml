@@ -8,14 +8,18 @@
 
     <Button
         android:id="@+id/EXPORTBTN"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
         android:onClick="onExportClick"
         android:text="EXPORT"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/DEBUG_TEXT" />
+        app:layout_constraintTop_toBottomOf="@+id/LOADALLPREF" />
 
     <TextView
         android:id="@+id/DEBUG_TEXT"
@@ -46,4 +50,32 @@
         app:layout_constraintTop_toBottomOf="@+id/EXPORTBTN">
 
     </ListView>
+
+    <Button
+        android:id="@+id/LOADALLPREF"
+        android:layout_width="137dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:onClick="onLoadPrefClick"
+        android:text="Load selection"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/DEBUG_TEXT" />
+
+    <EditText
+        android:id="@+id/EXPORTPATH"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:ems="10"
+        android:hint="Path"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toStartOf="@+id/LOADALLPREF"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/DEBUG_TEXT" />
 </androidx.constraintlayout.widget.ConstraintLayout>

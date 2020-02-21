@@ -72,12 +72,17 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    0);
+        }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     0);
-            finish();
         }
 
         //load shared pref with TDR dir
@@ -94,6 +99,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         buildProjList();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode,
+                                 Intent resultData){
+        super.onActivityResult(requestCode, resultCode, resultData);
+        finish();
     }
 
     public void onEnterClick(View v){
